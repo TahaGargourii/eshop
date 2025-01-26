@@ -2,6 +2,8 @@ package com.ecom.demo.entity;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 
 @Entity
 public class User {

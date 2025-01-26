@@ -1,0 +1,208 @@
+Subject: [PATCH] Product
+---
+Index: src/main/java/com/ecom/demo/repository/ProductRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/ecom/demo/repository/ProductRepository.java b/src/main/java/com/ecom/demo/repository/ProductRepository.java
+new file mode 100644
+--- /dev/null	(date 1737720496287)
++++ b/src/main/java/com/ecom/demo/repository/ProductRepository.java	(date 1737720496287)
+@@ -0,0 +1,11 @@
++package com.ecom.demo.repository;
++
++
++import com.ecom.demo.entity.Product;
++import org.springframework.data.jpa.repository.JpaRepository;
++import org.springframework.data.repository.CrudRepository;
++import org.springframework.stereotype.Repository;
++
++@Repository
++public interface ProductRepository extends JpaRepository<Product,Long> {
++}
+Index: src/main/resources/application.properties
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>ISO-8859-1
+===================================================================
+diff --git a/src/main/resources/application.properties b/src/main/resources/application.properties
+new file mode 100644
+--- /dev/null	(date 1737723063737)
++++ b/src/main/resources/application.properties	(date 1737723063737)
+@@ -0,0 +1,24 @@
++spring.application.name=demo
++# PostgreSQL Database Configuration
++spring.datasource.url=jdbc:postgresql://localhost:5432/eShop?
++spring.datasource.username=your_database_user
++spring.datasource.password=your_database_password
++
++# Hibernate JPA Configuration
++spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
++spring.jpa.show-sql=true
++spring.jpa.hibernate.ddl-auto=update
++
++# Connection Pool Configuration (Optional, but Recommended)
++spring.datasource.hikari.maximum-pool-size=10
++spring.datasource.hikari.minimum-idle=5
++spring.datasource.hikari.idle-timeout=30000
++spring.datasource.hikari.max-lifetime=1800000
++
++# Hibernate Properties
++spring.jpa.properties.hibernate.format_sql=true
++spring.jpa.properties.hibernate.default_schema=public
++
++# Logging (Optional)
++logging.level.org.hibernate.SQL=DEBUG
++logging.level.org.hibernate.type.descriptor.sql=TRACE
+Index: src/main/java/com/ecom/demo/dto/request/ProductRequest.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/ecom/demo/dto/request/ProductRequest.java b/src/main/java/com/ecom/demo/dto/request/ProductRequest.java
+new file mode 100644
+--- /dev/null	(date 1737721275949)
++++ b/src/main/java/com/ecom/demo/dto/request/ProductRequest.java	(date 1737721275949)
+@@ -0,0 +1,13 @@
++package com.ecom.demo.dto.request;
++
++import com.ecom.demo.entity.Category;
++
++public record ProductRequest(
++
++         String name,
++         String description,
++         Double price,
++         Integer quantity,
++
++         Category category) {
++}
+Index: src/main/java/com/ecom/demo/service/ProductService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/ecom/demo/service/ProductService.java b/src/main/java/com/ecom/demo/service/ProductService.java
+new file mode 100644
+--- /dev/null	(date 1737721275981)
++++ b/src/main/java/com/ecom/demo/service/ProductService.java	(date 1737721275981)
+@@ -0,0 +1,18 @@
++package com.ecom.demo.service;
++
++
++import com.ecom.demo.dto.request.ProductRequest;
++import com.ecom.demo.dto.response.ProductResponse;
++import org.springframework.stereotype.Service;
++
++import java.util.List;
++
++@Service
++public interface ProductService {
++
++    List<ProductResponse> getAllProducts();
++    ProductResponse getProductById(Long id);
++    void deleteProductById(Long id);
++    Long createProduct(ProductRequest productRequest);
++    void updateProduct(Long id, ProductRequest productRequest);
++}
+Index: src/main/java/com/ecom/demo/service/impl/ProductServiceImpl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/ecom/demo/service/impl/ProductServiceImpl.java b/src/main/java/com/ecom/demo/service/impl/ProductServiceImpl.java
+new file mode 100644
+--- /dev/null	(date 1737722496263)
++++ b/src/main/java/com/ecom/demo/service/impl/ProductServiceImpl.java	(date 1737722496263)
+@@ -0,0 +1,65 @@
++package com.ecom.demo.service.impl;
++
++import com.ecom.demo.dto.request.ProductRequest;
++import com.ecom.demo.dto.response.ProductResponse;
++import com.ecom.demo.entity.Product;
++import com.ecom.demo.mapper.ProductMapper;
++import com.ecom.demo.repository.ProductRepository;
++import com.ecom.demo.service.ProductService;
++import org.mapstruct.Mapper;
++import org.springframework.beans.factory.annotation.Autowired;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Objects;
++import java.util.Optional;
++
++public class ProductServiceImpl implements ProductService {
++    @Autowired
++    ProductRepository productRepository;
++    @Autowired
++    ProductMapper productMapper;
++    @Override
++    public List<ProductResponse> getAllProducts() {
++        List<ProductResponse> productResponses = new ArrayList<>();
++        List<Product> products = productRepository.findAll();
++        for (Product product : products) {
++            if (product != null) {
++                ProductResponse productResponse = productMapper.productToProductResponse(product);
++                productResponses.add(productResponse);
++            }
++        }
++        return productResponses;
++    }
++
++    @Override
++    public ProductResponse getProductById(Long id) {
++        Optional<Product> product = productRepository.findById(id);
++        ProductResponse productResponse = null;
++        if (product.isPresent()) {
++            productResponse = productMapper.productToProductResponse(product.get());
++        } else {
++            return null;
++        }
++
++        return productResponse;
++    }
++
++    @Override
++    public void deleteProductById(Long id) {
++        Optional<Product> product = productRepository.findById(id);
++        if (product.isPresent()) {
++            productRepository.deleteById(id);
++        }
++    }
++
++    @Override
++    public Long createProduct(ProductRequest productRequest) {
++        return 0L;
++    }
++
++    @Override
++    public void updateProduct(Long id, ProductRequest productRequest) {
++
++    }
++}
+Index: src/main/java/com/ecom/demo/dto/response/ProductResponse.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/ecom/demo/dto/response/ProductResponse.java b/src/main/java/com/ecom/demo/dto/response/ProductResponse.java
+new file mode 100644
+--- /dev/null	(date 1737721275964)
++++ b/src/main/java/com/ecom/demo/dto/response/ProductResponse.java	(date 1737721275964)
+@@ -0,0 +1,15 @@
++package com.ecom.demo.dto.response;
++
++import com.ecom.demo.entity.Category;
++
++public record ProductResponse(
++        Long id,
++
++        String name,
++        String description,
++        Double price,
++        Integer quantity,
++
++        Category category
++) {
++}
